@@ -25,7 +25,63 @@ Each target uses labels to drive alerting and identification.
 ### Example
 
 ```yaml
-- targets: ['1.1.1.1:9182']
+- targets: ['18.141.220.43:9182']
   labels:
-    name: 'Proxy'
+    name: 'Channel Proxy'
     os: 'windows'
+```
+
+### Automation Script
+Add a new server automatically
+
+#### Script:
+```
+scripts/add_node.sh
+```
+
+
+#### Features:
+
+Choose OS (Linux / Windows)
+
+Auto-select correct port
+
+Adds required labels
+
+Creates timestamped backups before changes
+
+#### Usage
+
+```
+chmod +x scripts/add_node.sh
+./scripts/add_node.sh
+```
+
+#### Backups
+
+Before modifying any file_sd file, the script creates a backup:
+
+```
+backup/
+├── linux_servers.yml.YYYYMMDD_HHMMSS.bak
+├── window_servers.yml.YYYYMMDD_HHMMSS.bak
+```
+
+#### Reload Prometheus
+
+After changes:
+
+```
+curl -X POST http://localhost:9090/-/reload
+```
+
+Or rely on Prometheus automatic reload for file_sd.
+
+#### Validation
+
+Always validate configs before reload:
+
+```
+promtool check config prometheus.yml
+promtool check rules rules/server-alerts.yml
+```
