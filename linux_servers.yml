@@ -1,0 +1,4 @@
+- targets: ['1.1.1.1:9100']
+  labels:
+    name: 'thisislinux'
+    os: 'linux'

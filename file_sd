@@ -1,0 +1,162 @@
+groups:
+
+# =========================
+# WINDOWS SERVERS
+# =========================
+- name: windows-server-alerts
+  rules:
+
+  - alert: WindowsCPUHigh
+    expr: |
+      100 - avg by (instance, name) (
+        rate(windows_cpu_time_total{os="windows", mode="idle"}[5m])
+      ) * 100 > 80
+    for: 3m
+    labels:
+      severity: warning
+    annotations:
+      summary: "High CPU on {{ $labels.name }}"
+      description: "CPU usage > 80% on {{ $labels.name }} ({{ $labels.instance }})"
+
+  - alert: WindowsRAMHigh
+    expr: |
+      (1 -
+        windows_os_physical_memory_free_bytes{os="windows"}
+        / windows_cs_physical_memory_bytes{os="windows"}
+      ) * 100 > 80
+    for: 3m
+    labels:
+      severity: warning
+    annotations:
+      summary: "High RAM on {{ $labels.name }}"
+      description: "Memory usage > 80% on {{ $labels.name }}"
+
+  - alert: WindowsDiskFull
+    expr: |
+      (1 -
+        windows_logical_disk_free_bytes{os="windows", volume="C:"}
+        / windows_logical_disk_size_bytes{os="windows", volume="C:"}
+      ) * 100 > 90
+    for: 3m
+    labels:
+      severity: warning
+    annotations:
+      summary: "Disk almost full on {{ $labels.name }}"
+      description: "C: drive usage > 90% on {{ $labels.name }}"
+
+  - alert: WindowsNetworkTransmitHigh
+    expr: |
+      sum by (instance, name) (
+        rate(windows_net_bytes_sent_total{os="windows"}[5m])
+      ) > 10 * 1024 * 1024
+    for: 3m
+    labels:
+      severity: warning
+    annotations:
+      summary: "High outbound network on {{ $labels.name }}"
+      description: "Outbound traffic > 10MB/s on {{ $labels.name }}"
+
+  - alert: WindowsNetworkReceiveHigh
+    expr: |
+      sum by (instance, name) (
+        rate(windows_net_bytes_received_total{os="windows"}[5m])
+      ) > 10 * 1024 * 1024
+    for: 3m
+    labels:
+      severity: warning
+    annotations:
+      summary: "High inbound network on {{ $labels.name }}"
+      description: "Inbound traffic > 10MB/s on {{ $labels.name }}"
+
+  - alert: WindowsServerDown
+    expr: up{job="windows_nodes"} == 0
+    for: 2m
+    labels:
+      severity: critical
+    annotations:
+      summary: "{{ $labels.name }} is DOWN"
+      description: "Prometheus cannot scrape {{ $labels.name }}"
+
+
+# =========================
+# LINUX SERVERS
+# =========================
+- name: linux-server-alerts
+  rules:
+
+  - alert: LinuxCPUHigh
+    expr: |
+      100 - avg by (instance, name) (
+        rate(node_cpu_seconds_total{os="linux", mode="idle"}[5m])
+      ) * 100 > 80
+    for: 3m
+    labels:
+      severity: warning
+    annotations:
+      summary: "High CPU on {{ $labels.name }}"
+      description: "CPU usage > 80% on {{ $labels.name }}"
+
+  - alert: LinuxRAMHigh
+    expr: |
+      (1 -
+        node_memory_MemAvailable_bytes{os="linux"}
+        / node_memory_MemTotal_bytes{os="linux"}
+      ) * 100 > 80
+    for: 3m
+    labels:
+      severity: warning
+    annotations:
+      summary: "High RAM on {{ $labels.name }}"
+      description: "Memory usage > 80% on {{ $labels.name }}"
+
+  - alert: LinuxDiskFull
+    expr: |
+      (1 -
+        node_filesystem_free_bytes{os="linux", mountpoint="/"}
+        / node_filesystem_size_bytes{os="linux", mountpoint="/"}
+      ) * 100 > 90
+    for: 3m
+    labels:
+      severity: warning
+    annotations:
+      summary: "Disk almost full on {{ $labels.name }}"
+      description: "Disk usage > 90% on {{ $labels.name }}"
+
+  - alert: LinuxNetworkTransmitHigh
+    expr: |
+      sum by (instance, name) (
+        rate(node_network_transmit_bytes_total{
+          os="linux",
+          device!~"lo|docker.*|veth.*"
+        }[5m])
+      ) > 10 * 1024 * 1024
+    for: 3m
+    labels:
+      severity: warning
+    annotations:
+      summary: "High outbound network on {{ $labels.name }}"
+      description: "Outbound traffic > 10MB/s on {{ $labels.name }}"
+
+  - alert: LinuxNetworkReceiveHigh
+    expr: |
+      sum by (instance, name) (
+        rate(node_network_receive_bytes_total{
+          os="linux",
+          device!~"lo|docker.*|veth.*"
+        }[5m])
+      ) > 10 * 1024 * 1024
+    for: 3m
+    labels:
+      severity: warning
+    annotations:
+      summary: "High inbound network on {{ $labels.name }}"
+      description: "Inbound traffic > 10MB/s on {{ $labels.name }}"
+
+  - alert: LinuxServerDown
+    expr: up{job="linux_nodes"} == 0
+    for: 2m
+    labels:
+      severity: critical
+    annotations:
+      summary: "{{ $labels.name }} is DOWN"
+      description: "Prometheus cannot scrape {{ $labels.name }}"

@@ -1,0 +1,4 @@
+- targets: ['windows_server:9182']
+  labels:
+    name: 'f'
+    os: 'windows'
