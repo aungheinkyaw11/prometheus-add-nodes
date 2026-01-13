@@ -36,7 +36,7 @@ Add a new server automatically
 
 #### Script:
 ```
-scripts/add_node.sh
+run.sh
 ```
 
 
